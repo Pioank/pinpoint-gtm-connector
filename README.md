@@ -10,7 +10,7 @@ Amazon Pinpoint users who want to record customer events from their web or mobil
 ### Solution
 Currently Amazon Pinpoint doesn't offer a tracking pixel or integration with GTM. The solution in this GitHub repository creates an Amazon API Gateway endpoint that can be used as a [GTM Custom Image Tag](https://support.google.com/tagmanager/answer/6107167?hl=en). GTM Custom Image Tags can append [GTM variables](https://support.google.com/tagmanager/answer/7683362?hl=en) as URL parameters when calling the Custom Image Tag. This way the application sitting in the other side of the API Gateway receives all information required to record a custom event by calling the Amazon Pinpoint API.
 
-
+![architecture_diagram](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/Assets/ArchitectureDiagram-Pinpoint-GTM.PNG)
 
 ### Use-cases
 
