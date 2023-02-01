@@ -1,0 +1,214 @@
+# Amazon Pinpoint pixel for customer events' tracking
+#
+# **DO NOT DELETE**
+#
+# author: pavlosik@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Amazon Pinpoint Pixel for customer events tracking
+
+Parameters:
+  PinpointAppId:
+    Type: String
+    Description: The Amazon Pinpoint application Id 
+  LambdaCodeS3BucketName:
+    Type: String
+    Description: The S3 bucket where the Lambda code is hosted
+  APIGatewayCorsDomain:
+    Type: String
+    Description: Your website domain from where the events will be tirggered e.g. https://domain.com
+
+Resources:
+
+  ##### SQS Queues
+  #######################################
+  PinpointEventsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PinpointEventsDeadLetterQueue.Arn
+        maxReceiveCount: 3
+
+  PinpointEventsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+
+
+  ##### Lambda Functions
+  #######################################
+  PinpointEventsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Role: !GetAtt PinpointEventsLambdaRole.Arn
+      Timeout: 300
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref PinpointEventsQueue
+          SQS_DLQ_QUEUE_URL: !Ref PinpointEventsDeadLetterQueue
+          PINPOINT_APP_ID: !Ref PinpointAppId
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      Code:
+        S3Bucket: !Ref LambdaCodeS3BucketName
+        S3Key: "PinpointPixelTracking.zip"
+
+  PinpointEventsLambdaEventMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 4
+      MaximumBatchingWindowInSeconds: 1
+      Enabled: True
+      EventSourceArn: !GetAtt PinpointEventsQueue.Arn
+      FunctionName: !Ref PinpointEventsLambda
+
+  PinpointEventsLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - "mobiletargeting:PutEvents"
+                Resource: !Sub arn:aws:mobiletargeting:${AWS::Region}:${AWS::AccountId}:apps/*
+              -
+                Effect: Allow
+                Action:
+                  - "sqs:SendMessage"
+                  - "sqs:ReceiveMessage"
+                  - "sqs:DeleteMessage"
+                  - "sqs:GetQueueAttributes"
+                Resource: !GetAtt PinpointEventsQueue.Arn
+              -
+                Effect: Allow
+                Action:
+                  - "sqs:SendMessage"
+                Resource: !GetAtt PinpointEventsDeadLetterQueue.Arn
+              -
+                Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+
+  ##### API Gateway
+  #######################################
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: "PinpointEventsAPI"
+      Body:
+        openapi: 3.0.0
+        components:
+          schemas:
+            Empty:
+              title: "Empty Schema"
+              type: "object"
+        paths:
+          /events:
+            get:
+              operationId: PinpointEventsPixel
+              requestBody:
+                content: application/json
+              responses:
+                "200":
+                  description: Event post successfully handled and placed on queue
+                "400":
+                  description: Bad request
+                "500":
+                  description: Server Error
+              x-amazon-apigateway-integration:
+                credentials: !GetAtt APIGatewayRole.Arn
+                httpMethod: "POST"
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${PinpointEventsQueue.QueueName}"
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseTemplates:
+                      application/json: "Success"
+                requestParameters:
+                  integration.request.header.Content-Type: "'application/x-www-form-urlencoded'"
+                requestTemplates:
+                  application/json: "Action=SendMessage&MessageBody=$util.escapeJavaScript($input.params())"
+                passthroughBehavior: "never"
+                type: "aws"
+            options:
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/Empty"
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'GET, OPTIONS'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: !Sub "'${APIGatewayCorsDomain}'"
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                passthroughBehavior: "when_no_match"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "mock"
+
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref RestApi
+      StageName: "Api-PinpointEvents"
+
+  APIGatewayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+      Path: /
+      Policies:
+        - 
+          PolicyName: "root"
+          PolicyDocument:
+            Statement:
+              - Action: sqs:SendMessage
+                Effect: Allow
+                Resource: !GetAtt 'PinpointEventsQueue.Arn'
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: '*'
