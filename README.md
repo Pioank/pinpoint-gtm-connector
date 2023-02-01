@@ -12,6 +12,15 @@ Currently Amazon Pinpoint doesn't offer a tracking pixel or integration with GTM
 
 ![architecture_diagram](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/Assets/ArchitectureDiagram-Pinpoint-GTM.PNG)
 
+The above architecture uses Amazon API Gateway to create an endpoint, Amazon SQS to batch & queue the click-stream events and AWS Lambda to process them and record the respective custom events to Amazon Pinpoint. Note that GTM is performing a GET request to the Amazon API Gateway endpoint, thus all data are passed as URL parameters and not in the headers or request body.
+
+### Authentication
+**Scenario 1 - Authenticated users:** Amazon API Gateway offers a variety of ways to authorize your requests including Amazon Cognito user pools, Lambda authorizers etc. - see full list [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-control-access-to-api.html). 
+
+**Scenario 2 - Unauthenticated users:** 
+
+In both scenarios, it is recommended to make use of [cross-origin resource sharing](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)(CORS) to restrict resources on a web page to be requested from another domain outside the domain which the first resource was served, see how to enable CORS for an Amazon API Gateway REST API resource [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-cors.html)
+
 ### Use-cases
 
 1) Subscription/Contract renewal
