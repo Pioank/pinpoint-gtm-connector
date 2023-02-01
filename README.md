@@ -14,10 +14,21 @@ Currently Amazon Pinpoint doesn't offer a tracking pixel or integration with GTM
 
 The above architecture uses Amazon API Gateway to create an endpoint, Amazon SQS to batch & queue the click-stream events and AWS Lambda to process them and record the respective custom events to Amazon Pinpoint. Note that GTM is performing a GET request to the Amazon API Gateway endpoint, thus all data are passed as URL parameters and not in the headers or request body.
 
+### URL parameters structure
+This solution is expecting the URL parameters **event** and **endpoint_id**, which are required from Amazon Pinpoint [put_events API operation](https://docs.aws.amazon.com/pinpoint/latest/apireference/apps-application-id-events.html). Along with the above URL parameters, put_events also requires a **Timestamp** that is generated in the AWS Lambda function but you can configure the solution to retrieve it as a URL parameter for higher accuracy.
+
+Amazon Pinpoint's put_events API operation can also include event attributes e.g. Value, ProductType as well as update the endpoint/user attributes e.g. FirstName or PurchaseDate. To add event attributes and user attributes, the GTM custom image tag URL parameters should start with **evat_{event-attribute}** and **usat_{user-attribute}** respectively. The application scans all URL parameters and if they start with evat or usat, it populates the API request body accordingly.
+
+Example of Image URL in GTM custom image tag:
+https://xxxxx.execute-api.us-east-1.amazonaws.com/Api-PinpointEvents/events?event={{Event}}&endpoint_id={{endpoint_id}}&evat_value={{value_dollars}}&usat_purchase_date={{purchase_date}}
+
 ### Authentication
-**Scenario 1 - Authenticated users:** Amazon API Gateway offers a variety of ways to authorize your requests including Amazon Cognito user pools, Lambda authorizers etc. - see full list [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-control-access-to-api.html). 
+Amazon Pinpoint's put_events API operation records custom events and can also update the endpoint/user attributes e.g. FirstName. Updating customer data without any authentication can have catastrophic results as this data are used for customer segmentation and message personalization purposes. At the same time there might be a requirement to record behavioural events from unauthenticated users (not logged-in).
+
+**Scenario 1 - Authenticated users:** Customers will need to authenticate to update customer data in Amazon Pinpoint. Amazon API Gateway offers a variety of ways to authorize your requests including Amazon Cognito user pools, Lambda authorizers etc. - see full list [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-control-access-to-api.html). Note that if customers don't authenticate, their events will still get recorded but they won't be able to update their customer data in Amazon Pinpoint.
 
 **Scenario 2 - Unauthenticated users:** 
+
 
 In both scenarios, it is recommended to make use of [cross-origin resource sharing](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)(CORS) to restrict resources on a web page to be requested from another domain outside the domain which the first resource was served, see how to enable CORS for an Amazon API Gateway REST API resource [here](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-cors.html)
 
