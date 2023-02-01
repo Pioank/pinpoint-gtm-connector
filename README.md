@@ -46,8 +46,8 @@ The Amazon API Gateway authentication is not offered as part of this solution
 
 ### Implementation
 1. Create or use an existing Amazon S3 bucket, which will be used to host the AWS Lambda code
-2. Upload the AWS Lambda code zipped file to the S3 bucket created or selected on the step above
-3. Deploy the AWS CloudFormation template in this repository
+2. Upload the [AWS Lambda code zipped file](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/PinpointPixelTracking.zip) to the S3 bucket created or selected on the step above
+3. Deploy the [AWS CloudFormation template](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/PinpointGTM-CFtemplate.yaml) 
 4. 
 
 
