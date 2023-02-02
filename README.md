@@ -49,6 +49,12 @@ The Amazon API Gateway authentication is not offered as part of this solution
 1. Create or use an existing Amazon S3 bucket, which will be used to host the AWS Lambda code
 2. Upload the [AWS Lambda code zipped file](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/PinpointPixelTracking.zip) to the S3 bucket created or selected on the step above
 3. Deploy the [AWS CloudFormation template](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/PinpointGTM-CFtemplate.yaml) 
-4. 
+4. Create a [Google Tag Manager Space](https://support.google.com/tagmanager/answer/7059647?hl=en) or access an existing one.
+5. From the **Built-In Variables** select **Event** and for the **User-Defined Variables** create one with the name **endpoint_id** and **Type** - **Data Layer Variable**
+![GTM_BuiltInVariables](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/Assets/GTM_BuiltInVariables.png)
+6. Create a new **Trigger** with **Event name** - **purchase_success**. Select **All Custom Events** as **This trigger fires on**
+![GTM_Triggers](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/Assets/GTM_Triggers.png)
+7. Create a new **Tag** with **Tag Type = Custom Image** and for **Image URL** paste the API Gateway's endpoint with the required URL parameters - see  example:https://xxxxxx.execute-api.us-east-1.amazonaws.com/Api-PinpointEvents/events?**event={{Event}}&endpoint_id={{endpoint_id}}**. Under **Firing Triggers** select **purchase_success** custom event
+![GTM_PinpointTag](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/Assets/GTM_PinpointTag.png)
 
 
