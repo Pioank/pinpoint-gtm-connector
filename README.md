@@ -61,6 +61,7 @@ The Amazon API Gateway authentication is not offered as part of this solution
 1. Download the [demo HTML page](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/Assets/Pinpoint_GTM-HTML-Template.html) and replace LINE 12 & 18 with the code provided by GTM
 ![GTM_Tags](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/Assets/GTM_Tags.png)
 2. Create an Amazon Pinpoint jounrey and make sure that the **Event** name under the **Entry** activity is written the same as in GTM and when loading the demo HTML page.
+![Pinpoint-journey](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/Assets/Pinpoint_Journey.png)
 3. Once the Amazon Pinpoint journey is published, open the demo HTML page on your local machine using a browser of your preference
 4. Type the endpoint id and event name and select **Submit**. This will record an event on GTM, which will then be forwarded to the GTM Custom Image tag => API Gateway endpoint => AWS Lambda => Amazon Pinpoint
 ![HTML-site](https://github.com/Pioank/pinpoint-gtm-connector/blob/main/Assets/HTML-site.PNG)
