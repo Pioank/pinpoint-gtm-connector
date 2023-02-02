@@ -23,7 +23,8 @@ This solution utilizes URL parameters to retrieve the required event data from G
 
 Amazon Pinpoint's put_events API operation can also include event attributes e.g. Value, ProductType as well as update the endpoint/user attributes e.g. FirstName or PurchaseDate. To add event attributes and user attributes, the GTM custom image tag URL parameters should start with **evat_{event-attribute}**  for event attributes and **usat_{user-attribute}** for user attributes. The application scans all URL parameters and if the first four characters match with **evat** or **usat**, it populates the API request body accordingly.
 
-Example of Image URL in GTM custom image tag:
+**Example of Image URL in GTM custom image tag:**
+
 https://xxxxx.execute-api.us-east-1.amazonaws.com/Api-PinpointEvents/events?event={{Event}}&endpoint_id={{endpoint_id}}&evat_value={{value_dollars}}&usat_purchase_date={{purchase_date}}
 
 ### Authentication
