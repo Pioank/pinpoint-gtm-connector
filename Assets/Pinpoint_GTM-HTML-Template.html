@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head> 
+    <title>Pinpoint-GTM page</title> 
+    <meta charset="utf-8"> 
+    <meta name="viewport" 
+          content="width=device-width, initial-scale=1"> 
+    <link rel="stylesheet" 
+          href= 
+"https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+	<!-- Google Tag Manager -->
+	PASTE GTM CODE HERE
+	<!-- End Google Tag Manager -->
+</head> 
+    
+<body> 
+	<!-- Google Tag Manager (noscript) -->
+	PASTE GTM CODE HERE
+	<!-- End Google Tag Manager (noscript) -->
+    <div class="container"> 
+        <h1 style="text-align:center;color:green;"> Pinpoint & GTM </h1> 
+        <form> 
+            <div class="form-group"> 
+                <label for="">Enter your endpoint_id here:</label> 
+                <input id="name"
+                       class="form-control" 
+                       type="text" 
+                       placeholder="Paste the endpoint_id"> 
+            </div> 
+            <div class="form-group"> 
+                <label for="">Enter your event_name here:</label> 
+                <input id="event"
+                       class="form-control" 
+                       type="text" 
+                       placeholder="Type event_name"> 
+            </div> 
+            <div class="form-group"> 
+                <button id="btn-alert"
+                        class="btn btn-success btn-lg float-right" 
+                        type="button"> 
+                     Submit  
+                </button> 
+            </div> 
+        </form> 
+    </div> 
+    <script>
+        var user_name = document.getElementById("name");
+		var event_name = document.getElementById("event");
+        document.getElementById("btn-alert").addEventListener("click", function(){
+            var value=user_name.value.trim();
+			var ev_value=event_name.value.trim();
+            if(!value)
+                alert("Name Cannot be empty!");
+            else
+				window.dataLayer = window.dataLayer || [{'endpoint_id':'na'}];
+                window.dataLayer.push({'event': ev_value, 'endpoint_id': value});
+				console.log("pushed " + value + ev_value);
+        });
+    </script>
+</body> 
+</html>
